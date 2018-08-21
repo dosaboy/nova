@@ -1756,6 +1756,7 @@ def _exec_ebtables(*cmd, **kwargs):
     # List of error strings to re-try.
     retry_strings = (
         'Multiple ebtables programs',
+        'Unable to create lock file',
     )
 
     # We always try at least once
@@ -1777,18 +1778,22 @@ def _exec_ebtables(*cmd, **kwargs):
             # See if we can retry the error.
             if any(error in exc.stderr for error in retry_strings):
                 if count > attempts and check_exit_code:
-                    LOG.warning(_LW('%s failed. Not Retrying.'), ' '.join(cmd))
+                    LOG.warning(_LW('%s failed (stderr=%s). Not Retrying.'),
+                                ' '.join(cmd), exc.stderr)
                     raise
                 else:
                     # We need to sleep a bit before retrying
-                    LOG.warning(_LW("%(cmd)s failed. Sleeping %(time)s "
+                    LOG.warning(_LW("%(cmd)s failed (stderr=%(stderr)s). "
+                                    "Sleeping %(time)s "
                                     "seconds before retry."),
-                                {'cmd': ' '.join(cmd), 'time': sleep})
+                                {'cmd': ' '.join(cmd), 'time': sleep,
+                                 'stderr': exc.stderr})
                     time.sleep(sleep)
             else:
                 # Not eligible for retry
                 if check_exit_code:
-                    LOG.warning(_LW('%s failed. Not Retrying.'), ' '.join(cmd))
+                    LOG.warning(_LW('%s failed (stderr=%s). Not Retrying.'),
+                                ' '.join(cmd), exc.stderr)
                     raise
                 else:
                     return
