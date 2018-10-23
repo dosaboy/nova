@@ -3492,13 +3492,18 @@ class NetworkManagerNoDBTestCase(test.NoDBTestCase):
                     self.context, objects.VirtualInterface(), vif)
         fip = objects.FixedIP._from_db_object(
                     self.context, objects.FixedIP(), fip)
+        fip.network = fake_network.fake_network_obj(self.context,
+                                                    fip.network_id)
         mock_fip_get_by_addr.return_value = fip
         mock_vif_get_by_addr.return_value = vif
 
-        with mock.patch.object(fip, 'save') as mock_fip_save:
-            with mock.patch.object(fip, 'disassociate') as mock_disassociate:
-                self.manager.release_fixed_ip(
-                    self.context, fip.address, vif.address)
+        with mock.patch.object(self.manager, '_teardown_network_on_host') as \
+                mock_teardown:
+            with mock.patch.object(fip, 'save') as mock_fip_save:
+                with mock.patch.object(fip, 'disassociate') as \
+                        mock_disassociate:
+                    self.manager.release_fixed_ip(
+                        self.context, fip.address, vif.address)
 
         mock_fip_save.assert_called_once_with()
         self.assertFalse(fip.leased)
@@ -3518,10 +3523,14 @@ class NetworkManagerNoDBTestCase(test.NoDBTestCase):
         mac = fip['virtual_interface']['address']
         fip = objects.FixedIP._from_db_object(
                     self.context, objects.FixedIP(), fip)
+        fip.network = fake_network.fake_network_obj(self.context,
+                                                    fip.network_id)
         mock_fip_get_by_addr.return_value = fip
 
-        with mock.patch.object(fip, 'disassociate') as mock_disassociate:
-            self.manager.release_fixed_ip(self.context, fip.address, mac)
+        with mock.patch.object(self.manager, '_teardown_network_on_host') as \
+                mock_teardown:
+            with mock.patch.object(fip, 'disassociate') as mock_disassociate:
+                self.manager.release_fixed_ip(self.context, fip.address, mac)
 
         mock_vif_get_by_addr.assert_called_once_with(self.context, mac)
         mock_disassociate.assert_called_once_with()
@@ -3535,10 +3544,14 @@ class NetworkManagerNoDBTestCase(test.NoDBTestCase):
         fip['leased'] = False
         fip = objects.FixedIP._from_db_object(
                     self.context, objects.FixedIP(), fip)
+        fip.network = fake_network.fake_network_obj(self.context,
+                                                    fip.network_id)
         mock_fip_get_by_addr.return_value = fip
 
-        with mock.patch.object(fip, 'disassociate') as mock_disassociate:
-            self.manager.release_fixed_ip(self.context, fip.address)
+        with mock.patch.object(self.manager, '_teardown_network_on_host') as \
+                mock_teardown:
+            with mock.patch.object(fip, 'disassociate') as mock_disassociate:
+                self.manager.release_fixed_ip(self.context, fip.address)
 
         mock_disassociate.assert_called_once_with()
 
@@ -3561,11 +3574,15 @@ class NetworkManagerNoDBTestCase(test.NoDBTestCase):
                     self.context, objects.VirtualInterface(), vif)
         fip = objects.FixedIP._from_db_object(
                     self.context, objects.FixedIP(), fip)
+        fip.network = fake_network.fake_network_obj(self.context,
+                                                    fip.network_id)
         mock_fip_get_by_addr.return_value = fip
         mock_vif_get_by_addr.return_value = vif
 
-        with mock.patch.object(fip, 'disassociate') as mock_disassociate:
-            self.manager.release_fixed_ip(
+        with mock.patch.object(self.manager, '_teardown_network_on_host') as \
+                mock_teardown:        
+            with mock.patch.object(fip, 'disassociate') as mock_disassociate:
+                self.manager.release_fixed_ip(
                 self.context, fip.address, vif.address)
 
         mock_vif_get_by_addr.assert_called_once_with(self.context, vif.address)
